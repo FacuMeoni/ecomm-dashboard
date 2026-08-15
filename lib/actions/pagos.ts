@@ -31,6 +31,44 @@ export async function addPago(_prevState: PagoFormState, formData: FormData): Pr
   revalidatePath("/orders");
 }
 
+export async function updatePago(
+  pagoId: string,
+  _prevState: PagoFormState,
+  formData: FormData
+): Promise<PagoFormState> {
+  await requireUser();
+
+  const validated = PagoSchema.safeParse({
+    order_id: formData.get("order_id"),
+    monto: formData.get("monto"),
+    metodo_pago: formData.get("metodo_pago"),
+    fecha_pago: formData.get("fecha_pago"),
+    nota: formData.get("nota") || undefined,
+  });
+
+  if (!validated.success) {
+    return { errors: validated.error.flatten().fieldErrors };
+  }
+
+  const supabase = await createClient();
+  const { error } = await supabase
+    .from("pagos")
+    .update({
+      monto: validated.data.monto,
+      metodo_pago: validated.data.metodo_pago,
+      fecha_pago: validated.data.fecha_pago,
+      nota: validated.data.nota ?? null,
+    })
+    .eq("id", pagoId);
+
+  if (error) {
+    return { message: "No se pudo guardar el pago. Probá de nuevo." };
+  }
+
+  revalidatePath(`/orders/${validated.data.order_id}`);
+  revalidatePath("/orders");
+}
+
 export async function deletePago(pagoId: string, orderId: string) {
   await requireUser();
 

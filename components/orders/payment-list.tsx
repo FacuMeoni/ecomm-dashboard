@@ -12,6 +12,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
+import { EditPagoDialog } from "@/components/orders/edit-pago-dialog";
 import { deletePago } from "@/lib/actions/pagos";
 import type { Database } from "@/lib/types/database.types";
 
@@ -43,7 +44,7 @@ export function PaymentList({ pagos, orderId }: { pagos: Pago[]; orderId: string
             <TableHead>Monto</TableHead>
             <TableHead>Método</TableHead>
             <TableHead>Nota</TableHead>
-            <TableHead className="w-10" />
+            <TableHead className="w-20" />
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -54,20 +55,24 @@ export function PaymentList({ pagos, orderId }: { pagos: Pago[]; orderId: string
               <TableCell>{METODO_LABELS[pago.metodo_pago]}</TableCell>
               <TableCell className="text-muted-foreground">{pago.nota || "—"}</TableCell>
               <TableCell>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="icon-sm"
-                  disabled={isPending}
-                  onClick={() => {
-                    startTransition(async () => {
-                      await deletePago(pago.id, orderId);
-                      toast.success("Pago eliminado.");
-                    });
-                  }}
-                >
-                  <Trash2 className="text-destructive" />
-                </Button>
+                <div className="flex items-center gap-1">
+                  <EditPagoDialog pago={pago} orderId={orderId} />
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon-sm"
+                    disabled={isPending}
+                    onClick={() => {
+                      startTransition(async () => {
+                        await deletePago(pago.id, orderId);
+                        toast.success("Pago eliminado.");
+                      });
+                    }}
+                  >
+                    <Trash2 className="text-destructive" />
+                    <span className="sr-only">Eliminar pago</span>
+                  </Button>
+                </div>
               </TableCell>
             </TableRow>
           ))}

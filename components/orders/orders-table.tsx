@@ -9,17 +9,16 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { OrderStatusBadge } from "@/components/orders/order-status-badge";
+import { OrderRowActions } from "@/components/orders/order-row-actions";
 import { cn } from "@/lib/utils";
-import type { Database } from "@/lib/types/database.types";
-
-type OrderResumenRow = Database["public"]["Views"]["orders_resumen"]["Row"];
+import type { OrderResumen } from "@/lib/orders";
 
 const currency = new Intl.NumberFormat("es-AR", {
   style: "currency",
   currency: "ARS",
 });
 
-export function OrdersTable({ orders }: { orders: OrderResumenRow[] }) {
+export function OrdersTable({ orders }: { orders: OrderResumen[] }) {
   if (orders.length === 0) {
     return (
       <div className="flex h-40 items-center justify-center rounded-lg border border-dashed text-sm text-muted-foreground">
@@ -38,6 +37,7 @@ export function OrdersTable({ orders }: { orders: OrderResumenRow[] }) {
             <TableHead>Precio</TableHead>
             <TableHead>Estado</TableHead>
             <TableHead>Saldo</TableHead>
+            <TableHead className="text-right">Acciones</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -77,6 +77,9 @@ export function OrdersTable({ orders }: { orders: OrderResumenRow[] }) {
                       : "Saldado"}
                   </Badge>
                 </Link>
+              </TableCell>
+              <TableCell className="text-right">
+                <OrderRowActions orderId={order.id} />
               </TableCell>
             </TableRow>
           ))}

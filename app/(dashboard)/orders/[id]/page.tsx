@@ -9,6 +9,7 @@ import { StatusSelect } from "@/components/orders/status-select";
 import { PaymentList } from "@/components/orders/payment-list";
 import { PaymentFormDialog } from "@/components/orders/payment-form-dialog";
 import { DeleteOrderButton } from "@/components/orders/delete-order-button";
+import { normalizeOrderResumen } from "@/lib/orders";
 
 const currency = new Intl.NumberFormat("es-AR", {
   style: "currency",
@@ -21,14 +22,16 @@ export default async function OrderDetailPage(props: PageProps<"/orders/[id]">) 
 
   const supabase = await createClient();
 
-  const [{ data: order }, { data: pagos }] = await Promise.all([
+  const [{ data: orderRow }, { data: pagos }] = await Promise.all([
     supabase.from("orders_resumen").select("*").eq("id", id).single(),
     supabase.from("pagos").select("*").eq("order_id", id).order("fecha_pago", { ascending: false }),
   ]);
 
-  if (!order) {
+  if (!orderRow) {
     notFound();
   }
+
+  const order = normalizeOrderResumen(orderRow);
 
   return (
     <div className="flex flex-col gap-6">
@@ -38,7 +41,7 @@ export default async function OrderDetailPage(props: PageProps<"/orders/[id]">) 
           <p className="text-sm text-muted-foreground">{order.nombre_comprador}</p>
         </div>
         <div className="flex items-center gap-2">
-          <Button variant="outline" size="sm" render={<Link href={`/orders/${order.id}/edit`} />}>
+          <Button variant="outline" size="sm" nativeButton={false} render={<Link href={`/orders/${order.id}/edit`} />}>
             Editar
           </Button>
           <DeleteOrderButton orderId={order.id} />
@@ -64,12 +67,22 @@ export default async function OrderDetailPage(props: PageProps<"/orders/[id]">) 
         </Card>
         <Card>
           <CardHeader>
-            <CardTitle className="text-sm font-medium text-muted-foreground">Saldo restante</CardTitle>
+            <CardTitle className="text-sm font-medium text-muted-foreground">Precio costo</CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-xl font-semibold">{currency.format(order.monto_restante)}</p>
+            <p className="text-xl font-semibold">{currency.format(order.costo)}</p>
           </CardContent>
         </Card>
+        {(pagos ?? []).length > 0 && (
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-sm font-medium text-muted-foreground">Saldo restante</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-xl font-semibold">{currency.format(order.monto_restante)}</p>
+            </CardContent>
+          </Card>
+        )}
       </div>
 
       <div className="flex flex-col gap-1.5">
